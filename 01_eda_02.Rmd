@@ -1,0 +1,63 @@
+---
+title: "EDA - 01"
+subtitle: "Counting Rows & # Clients"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+```
+
+# Conteos de Filas y de Clientes {.tabset}
+
+## base1_train
+```{r}
+base1_train<-readRDS("data/Base1_train.rds")
+head(base1_train)
+```
+- **Número de filas:** `r format(nrow(base1_train), nsmall=1, big.mark=",")`
+
+- **Número de Clientes:** `r format(length(unique(base1_train$COD_CLIENTE)), nsmall=1, big.mark=",")`
+
+## base2
+```{r}
+base2<-readRDS("data/Base2.rds")
+head(base2)
+```
+
+- **Número de filas:** `r format(nrow(base2), nsmall=1, big.mark=",")`
+
+- **Número de Clientes:** `r format(length(unique(base2$COD_CLIENTE)), nsmall=1, big.mark=",")`
+
+
+## base3
+```{r}
+base3<-readRDS("data/Base3.rds")
+head(base3)
+```
+
+- **Número de filas:** `r format(nrow(base3), nsmall=1, big.mark=",")`
+
+- **Número de Clientes:** `r format(length(unique(base3$COD_CLIENTE)), nsmall=1, big.mark=",")`
+
+
+## base4
+```{r}
+base4<-readRDS("data/Base4.rds")
+head(base4)
+```
+
+- **Número de filas:** `r format(nrow(base4), nsmall=1, big.mark=",")`
+
+- **Número de Clientes:** `r format(length(unique(base4$COD_CLIENTE)), nsmall=1, big.mark=",")`
+
+
+## base5
+```{r}
+base5<-readRDS("data/Base5.rds")
+head(base5)
+```
+
+- **Número de filas:** `r format(nrow(base5), nsmall=1, big.mark=",")`
+
+- **Número de Clientes:** `r format(length(unique(base5$COD_CLIENTE)), nsmall=1, big.mark=",")`

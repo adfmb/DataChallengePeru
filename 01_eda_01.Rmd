@@ -1,0 +1,64 @@
+---
+title: "EDA - 01"
+subtitle: "Reading CSV & saving RDS"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+lista_archivos<-list.files("data/")
+lista_archivos_csv<-lista_archivos[grepl(".csv",lista_archivos)]
+for(i in 1:length(lista_archivos_csv)){
+  nombre_csv<-lista_archivos_csv[i]
+  print(nombre_csv)
+  
+  basetmp<-read.csv(paste0("data/",nombre_csv),header = T)
+  
+  print(head(basetmp))
+  # nombre_rds<-gsub(".csv",".rds",nombre_csv)
+  # saveRDS(basetmp,paste0("data/",nombre_rds))
+}
+```
+
+```{r}
+lista_archivos<-list.files("data/")
+lista_archivos_csv<-lista_archivos[grepl(".csv",lista_archivos)]
+for(i in 1:length(lista_archivos_csv)){
+  nombre_csv<-lista_archivos_csv[i]
+  print(nombre_csv)
+  if(i>2){
+    basetmp<-read.csv(paste0("data/",nombre_csv),header = T,sep = ";")
+  }else{
+    basetmp<-read.csv(paste0("data/",nombre_csv),header = T)
+  }
+  
+  print(head(basetmp))
+  # nombre_rds<-gsub(".csv",".rds",nombre_csv)
+  # saveRDS(basetmp,paste0("data/",nombre_rds))
+}
+```
+
+```{r}
+lista_archivos<-list.files("data/")
+lista_archivos_csv<-lista_archivos[grepl(".csv",lista_archivos)]
+for(i in 1:length(lista_archivos_csv)){
+  nombre_csv<-lista_archivos_csv[i]
+  print(nombre_csv)
+  if(i>2){
+    basetmp<-read.csv(paste0("data/",nombre_csv),header = T,sep = ";")
+  }else{
+    basetmp<-read.csv(paste0("data/",nombre_csv),header = T)
+  }
+  
+  nombre_rds<-gsub(".csv",".rds",nombre_csv)
+  saveRDS(basetmp%>%as_data_frame(),paste0("data/",nombre_rds))
+}
+```
+
+```{r}
+
+```
+
