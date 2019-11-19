@@ -40,19 +40,36 @@ nombres_base3_to_spread
 
 
 ```{r}
-base3a<-base3
+base3a<-base3%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  # filter(row_number()==1)%>%
+  summarise(
+    anio_cot=unique(anio_cot),
+    mes_cot=unique(mes_cot),
+    numfhs_dat=length(unique(aniomes_dat)),
+    min_dat=min(aniomes_dat),
+    max_dat=max(aniomes_dat),
+    min_meses_dif=min(tiempo_meses_cot_dat),
+    max_meses=max(tiempo_meses_cot_dat)
+  )#%>%
+  # ungroup()
+
+saveRDS(base3a,"data/Base3a.rds")
+base3a
 ```
 
 ```{r}
+# base3a<-readRDS("data/Base3a.rds")
+base3b<-base3a%>%
+  ungroup()
 print("---nombres_base3_to_spread")
   for(idvar00 in 1:length(nombres_base3_to_spread)){
-    # idvar00<-1
+    # idvar00<-2
     var00<-nombres_base3_to_spread[idvar00]
     print(paste0(">>>>>>>>>>",var00))
     
-    # lista_x<-list(var00,)
-    
-    base3a_tmp<-base3a%>%
+    base3a_tmp<-base3%>%
+      # filter(COD_CLIENTE%in%c("==BBVAPE116964831"))%>%
       # mutate(var_tmp=)
       mutate_(.dots = setNames(var00, "var_tmp"))%>%
       select(
@@ -60,27 +77,85 @@ print("---nombres_base3_to_spread")
         c("COD_CLIENTE","aniomes_cot","aniomes_dat","tiempo_meses_cot_dat")
         ),one_of(var00),var_tmp)%>%
       mutate(
-        nombre_var_tmp=paste0(nombres_base3_to_spread[idvar00],"_",tiempo_meses_cot_dat)#,
+        nombre_var_tmp=paste0(nombres_base3_to_spread[idvar00],"_mesesdat_m",tiempo_meses_cot_dat)#,
         # nombre_var_tmp=paste0(var00,"_",var_tmp)
         )%>%
       spread(nombre_var_tmp,var_tmp,fill=-778899)%>%
-      select(-one_of(var00))
+      select(-one_of(var00))%>%
+      group_by(COD_CLIENTE,aniomes_cot)%>%
+      summarise_at(vars(starts_with(var00)),max)
     
-    print(paste0(var00,"_",unlist(unique(catalogo_tmp03[var00]))))
+    print(sort(paste0(var00,"_",unlist(unique(base3$tiempo_meses_cot_dat)))))
     
-    catalogo_tmp03<-catalogo_tmp03%>%
-      # select(-one_of(var00))%>%
+    base3b<-base3b%>%
       left_join(
-        catalogo_tmp03_vartmp,
-        by=c("CONTRATO"="CONTRATO","aniomes_actual_ciclo"="aniomes_actual_ciclo")
-      )#%>%
-      # select(starts_with(var00))
+        base3a_tmp
+      )
     
-    saveRDS(catalogo_tmp03_vartmp,paste0("data/ciclos_ctlgos03_",aniomes_tmp,"_vartmp_",var00,".rds"))
+    # saveRDS(catalogo_tmp03_vartmp,paste0("data/ciclos_ctlgos03_",aniomes_tmp,"_vartmp_",var00,".rds"))
     
     # length(unique(catalogo_tmp03_vartmp$CONTRATO))
     
   }
+
+length(nombres_base3_to_spread)*6+ncol(base3a); ncol(base3b)
+((length(nombres_base3_to_spread)*6)+ncol(base3a)) == ncol(base3b)
+# saveRDS(base3b,"data/Base3b.rds")
 ```
 
+```{r}
+base3a_tmp%>%
+  ungroup()%>%
+  filter(COD_CLIENTE%in%c("==BBVAPE116964831"))
+```
+```{r}
+base3a_tmp%>%
+  ungroup()
+```
+
+```{r}
+# base3a<-readRDS("data/Base3a.rds")
+base3b<-base3a%>%
+  ungroup()
+print("---nombres_base3_to_spread")
+  for(idvar00 in 1:length(nombres_base3_to_spread)){
+    # idvar00<-2
+    var00<-nombres_base3_to_spread[idvar00]
+    print(paste0(">>>>>>>>>>",var00))
+    
+    base3a_tmp<-base3%>%
+      # filter(COD_CLIENTE%in%c("==BBVAPE116964831"))%>%
+      # mutate(var_tmp=)
+      mutate_(.dots = setNames(var00, "var_tmp"))%>%
+      select(
+        one_of(
+        c("COD_CLIENTE","aniomes_cot","aniomes_dat","tiempo_meses_cot_dat")
+        ),one_of(var00),var_tmp)%>%
+      mutate(
+        nombre_var_tmp=paste0(nombres_base3_to_spread[idvar00],"_mesesdat_m",tiempo_meses_cot_dat)#,
+        # nombre_var_tmp=paste0(var00,"_",var_tmp)
+        )%>%
+      spread(nombre_var_tmp,var_tmp,fill=-778899)%>%
+      select(-one_of(var00))%>%
+      group_by(COD_CLIENTE,aniomes_cot)%>%
+      summarise_at(vars(starts_with(var00)),max)
+    
+    print(sort(paste0(var00,"_",unlist(unique(base3$tiempo_meses_cot_dat)))))
+    
+    base3b<-base3b%>%
+      left_join(
+        base3a_tmp
+      )
+    
+    # saveRDS(catalogo_tmp03_vartmp,paste0("data/ciclos_ctlgos03_",aniomes_tmp,"_vartmp_",var00,".rds"))
+    
+    # length(unique(catalogo_tmp03_vartmp$CONTRATO))
+    
+  }
+
+length(nombres_base3_to_spread)*6+ncol(base3a); ncol(base3b)
+((length(nombres_base3_to_spread)*6)+ncol(base3a)) == ncol(base3b)
+# saveRDS(base3b,"data/Base3b.rds")
+base3b
+```
 
