@@ -277,12 +277,22 @@ gb_num_mes_data%>%
 
 ```{r}
 gb_num_mes_data%>%
+  filter(num_mes_data==1)
+```
+
+```{r}
+gb_num_mes_data%>%
   filter(num_mes_data>1)
 ```
 
 ```{r}
 base3%>%
-  filter(COD_CLIENTE%in%c("==BBVAPE10013115"))
+  # filter(COD_CLIENTE%in%c("==BBVAPE10013115"))
+  # filter(COD_CLIENTE%in%c("==BBVAPE100743789"))%>%
+  filter(COD_CLIENTE%in%c("==BBVAPE182316225"))%>%
+  select(MES_COTIZACION,MES_DATA,COD_CLIENTE,aniomes_cot,aniomes_dat,tiempo_meses_cot_dat,CTA_AHORRO)%>%
+  arrange(COD_CLIENTE,aniomes_cot,aniomes_dat,tiempo_meses_cot_dat)
+
 ```
 
 ```{r}
@@ -462,6 +472,127 @@ base4%>%
   print(n=nrow(.))
 ```
 
+
+
+#### `num MES_DATA x COD_CLIENTE`
+```{r}
+gb_num_mes_data<-base4%>%
+  group_by(COD_CLIENTE, MES_DATA)%>%
+  summarise(
+    n=n()
+    )%>%
+  ungroup()%>%
+  group_by(COD_CLIENTE)%>%
+  summarise(
+    num_mes_data=n()
+  )
+
+gb_num_mes_data%>%
+  group_by(num_mes_data)%>%
+  summarise(
+    freq_n_mes_data=n()
+  )%>%
+  print(n=nrow(.))
+```
+
+```{r}
+gb_num_mes_data%>%
+  filter(num_mes_data==1)
+```
+
+```{r}
+gb_num_mes_data%>%
+  filter(num_mes_data>1)
+```
+
+```{r}
+base4%>%
+  # filter(COD_CLIENTE%in%c("==BBVAPE10013115"))
+  # filter(COD_CLIENTE%in%c("==BBVAPE100743789"))%>%
+  filter(COD_CLIENTE%in%c("==BBVAPE182316225"))%>%
+  select(MES_COTIZACION,MES_DATA,COD_CLIENTE,aniomes_cot,aniomes_dat,tiempo_meses_cot_dat,ST_CREDITO)%>%
+  arrange(COD_CLIENTE,aniomes_cot,aniomes_dat,tiempo_meses_cot_dat)
+
+```
+
+```{r}
+base4<-base4%>%
+  mutate(
+    fh_cotizacion=as.character(MES_COTIZACION)
+  )
+base4%>%
+  select(MES_COTIZACION,fh_cotizacion)%>%
+  mutate(
+    fh_cotizacion=as.POSIXct(fh_cotizacion, format="%d/%m/%Y")
+  )%>%
+  group_by(MES_COTIZACION,fh_cotizacion)%>%
+  summarise(n=n())
+```
+```{r}
+library(lubridate)
+base4<-base4%>%
+  mutate(
+    fh_cotizacion=as.character(MES_COTIZACION),
+    fh_cotizacion=as.POSIXct(fh_cotizacion, format="%d/%m/%Y"),
+    mes_cot=month(fh_cotizacion),
+    anio_cot=year(fh_cotizacion),
+    
+    fh_data=as.character(MES_DATA),
+    fh_data=as.POSIXct(fh_data, format="%d/%m/%Y"),
+    mes_dat=month(fh_data),
+    anio_dat=year(fh_data)
+  )
+
+base4%>%
+  select(MES_COTIZACION,fh_cotizacion,mes_cot,anio_cot,MES_DATA,fh_data,mes_dat,anio_dat)
+```
+
+```{r}
+base4<-base4%>%
+  mutate(
+    aniomes_cot=(100*anio_cot) + mes_cot,
+    aniomes_dat=(100*anio_dat) + mes_dat,
+    I_cot_post_dat=if_else(aniomes_cot>=aniomes_dat,1,0)
+  )
+
+head(base4)
+base4%>%
+  group_by(I_cot_post_dat)%>%
+  summarise(n=n())
+
+# saveRDS(base4,"data/Base4.rds")
+```
+
+```{r}
+base4<-base4%>%
+  mutate(
+    tiempo_meses_cot_dat= 12*(anio_cot - anio_dat) + (mes_cot - mes_dat)
+  )
+
+base4%>%
+  group_by(tiempo_meses_cot_dat)%>%
+  summarise(n=n())
+
+# saveRDS(base4,"data/Base4.rds")
+```
+
+```{r}
+nombres_base4<-names(base4)
+nombres_base4
+```
+
+```{r}
+nombres_base4_to_spread<-nombres_base4[!nombres_base4%in%c(
+  "MES_COTIZACION","MES_DATA","COD_CLIENTE",
+  "fh_cotizacion","mes_cot","anio_cot","aniomes_cot",
+  "fh_data","mes_dat","anio_dat","aniomes_dat",
+  "I_cot_post_dat","tiempo_meses_cot_dat"
+)]
+nombres_base4_to_spread
+```
+
+
+
 ## base5
 ```{r}
 base5<-readRDS("data/Base5.rds")
@@ -543,4 +674,124 @@ base5%>%
   )%>%
   print(n=nrow(.))
 ```
+
+
+
+#### `num MES_DATA x COD_CLIENTE`
+```{r}
+gb_num_mes_data<-base5%>%
+  group_by(COD_CLIENTE, MES_DATA)%>%
+  summarise(
+    n=n()
+    )%>%
+  ungroup()%>%
+  group_by(COD_CLIENTE)%>%
+  summarise(
+    num_mes_data=n()
+  )
+
+gb_num_mes_data%>%
+  group_by(num_mes_data)%>%
+  summarise(
+    freq_n_mes_data=n()
+  )%>%
+  print(n=nrow(.))
+```
+
+```{r}
+gb_num_mes_data%>%
+  filter(num_mes_data==1)
+```
+
+```{r}
+gb_num_mes_data%>%
+  filter(num_mes_data>1)
+```
+
+```{r}
+base5%>%
+  # filter(COD_CLIENTE%in%c("==BBVAPE10013115"))
+  # filter(COD_CLIENTE%in%c("==BBVAPE100743789"))%>%
+  filter(COD_CLIENTE%in%c("==BBVAPE182316225"))%>%
+  select(MES_COTIZACION,MES_DATA,COD_CLIENTE,aniomes_cot,aniomes_dat,tiempo_meses_cot_dat,ST_CREDITO)%>%
+  arrange(COD_CLIENTE,aniomes_cot,aniomes_dat,tiempo_meses_cot_dat)
+
+```
+
+```{r}
+base5<-base5%>%
+  mutate(
+    fh_cotizacion=as.character(MES_COTIZACION)
+  )
+base5%>%
+  select(MES_COTIZACION,fh_cotizacion)%>%
+  mutate(
+    fh_cotizacion=as.POSIXct(fh_cotizacion, format="%d/%m/%Y")
+  )%>%
+  group_by(MES_COTIZACION,fh_cotizacion)%>%
+  summarise(n=n())
+```
+```{r}
+library(lubridate)
+base5<-base5%>%
+  mutate(
+    fh_cotizacion=as.character(MES_COTIZACION),
+    fh_cotizacion=as.POSIXct(fh_cotizacion, format="%d/%m/%Y"),
+    mes_cot=month(fh_cotizacion),
+    anio_cot=year(fh_cotizacion),
+    
+    fh_data=as.character(MES_DATA),
+    fh_data=as.POSIXct(fh_data, format="%d/%m/%Y"),
+    mes_dat=month(fh_data),
+    anio_dat=year(fh_data)
+  )
+
+base5%>%
+  select(MES_COTIZACION,fh_cotizacion,mes_cot,anio_cot,MES_DATA,fh_data,mes_dat,anio_dat)
+```
+
+```{r}
+base5<-base5%>%
+  mutate(
+    aniomes_cot=(100*anio_cot) + mes_cot,
+    aniomes_dat=(100*anio_dat) + mes_dat,
+    I_cot_post_dat=if_else(aniomes_cot>=aniomes_dat,1,0)
+  )
+
+head(base5)
+base5%>%
+  group_by(I_cot_post_dat)%>%
+  summarise(n=n())
+
+# saveRDS(base5,"data/Base5.rds")
+```
+
+```{r}
+base5<-base5%>%
+  mutate(
+    tiempo_meses_cot_dat= 12*(anio_cot - anio_dat) + (mes_cot - mes_dat)
+  )
+
+base5%>%
+  group_by(tiempo_meses_cot_dat)%>%
+  summarise(n=n())
+
+saveRDS(base5,"data/Base5.rds")
+```
+
+```{r}
+nombres_base5<-names(base5)
+nombres_base5
+```
+
+```{r}
+nombres_base5_to_spread<-nombres_base5[!nombres_base5%in%c(
+  "MES_COTIZACION","MES_DATA","COD_CLIENTE",
+  "fh_cotizacion","mes_cot","anio_cot","aniomes_cot",
+  "fh_data","mes_dat","anio_dat","aniomes_dat",
+  "I_cot_post_dat","tiempo_meses_cot_dat"
+)]
+nombres_base5_to_spread
+```
+
 
