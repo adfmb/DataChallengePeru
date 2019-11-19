@@ -6,6 +6,7 @@ output: html_notebook
 
 ```{r}
 library(dplyr)
+library(ggplot2)
 ```
 
 # Conteos de Filas y de Clientes {.tabset}
@@ -19,6 +20,86 @@ head(base1_train)
 
 - **Número de Clientes:** `r format(length(unique(base1_train$COD_CLIENTE)), nsmall=1, big.mark=",")`
 
+### Distribuciones {.tabset}
+
+#### `MES_COTIZACION`
+```{r}
+base1_train%>%
+  group_by(MES_COTIZACION)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+
+#### `GARANTIA`
+```{r}
+base1_train%>%
+  group_by(GARANTIA)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `FLG_DESEMBOLSO`
+```{r}
+base1_train%>%
+  group_by(FLG_DESEMBOLSO)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `GARANTIA & FLG_DESEMBOLSO`
+```{r}
+base1_train%>%
+  group_by(GARANTIA, FLG_DESEMBOLSO)%>%
+  summarise(
+    n=n()
+    )%>%
+  ungroup()%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+
+#### `IMPORTE`
+```{r}
+source("yuca/TR_yk.R")
+source("gits_externos/codigos_TR-master/yuca/TR_yk_samuel.R")
+mtr3_tmp<-MTR3_yk(base1_train$IMPORTE,base1_train$FLG_DESEMBOLSO)
+tndnc_tmp<-if_else(mtr3_tmp$ga==max(mtr3_tmp$ga,mtr3_tmp$gd),"up","down")
+
+mtr4_tmp<-MTR4_yk(as.data.frame(base1_train),vvect = c("IMPORTE","PLAZO","TEA_MINIMA"),vobj = "FLG_DESEMBOLSO",verbose = T)
+lmtr5<-MTR5_yk(mtr4_tmp)
+biv<-bivariado(mtr = lmtr5,specificvars = c("IMPORTE","PLAZO","TEA_MINIMA"),label_eje_y = "tasa de aceptación")
+biv$listaFinal$IMPORTE
+```
+
+#### `PLAZO`
+```{r}
+biv$listaFinal$PLAZO
+```
+
+#### `TEA_MINIMA`
+```{r}
+biv$listaFinal$TEA_MINIMA
+```
+
 ## base2
 ```{r}
 base2<-readRDS("data/Base2.rds")
@@ -30,6 +111,93 @@ head(base2)
 - **Número de Clientes:** `r format(length(unique(base2$COD_CLIENTE)), nsmall=1, big.mark=",")`
 
 
+### Distribuciones {.tabset}
+
+#### `MES_COTIZACION`
+```{r}
+base2%>%
+  group_by(MES_COTIZACION)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+
+#### `RNG_EDAD`
+```{r}
+base2%>%
+  group_by(RNG_EDAD)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `SEXO`
+```{r}
+base2%>%
+  group_by(SEXO)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `ESTADO_CIVIL`
+```{r}
+base2%>%
+  group_by(ESTADO_CIVIL)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `RNG_INGRESO`
+```{r}
+base2%>%
+  group_by(RNG_INGRESO)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `REGION`
+```{r}
+base2%>%
+  group_by(REGION)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `ANT_CLIENTE`
+```{r}
+ggplot(base2)+
+  geom_density(aes(x=ANT_CLIENTE))
+```
+
 ## base3
 ```{r}
 base3<-readRDS("data/Base3.rds")
@@ -39,6 +207,194 @@ head(base3)
 - **Número de filas:** `r format(nrow(base3), nsmall=1, big.mark=",")`
 
 - **Número de Clientes:** `r format(length(unique(base3$COD_CLIENTE)), nsmall=1, big.mark=",")`
+
+- **Número de Clientes + Mes Cotización:** `r format(nrow(base3%>%distinct(COD_CLIENTE,MES_COTIZACION)), nsmall=1, big.mark=",")`
+
+
+
+### Distribuciones {.tabset}
+
+#### `MES_COTIZACION`
+```{r}
+base3%>%
+  group_by(MES_COTIZACION)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `MES_DATA`
+```{r}
+base3%>%
+  group_by(MES_DATA)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `MES_COTIZACION & MES_DATA`
+```{r}
+base3%>%
+  group_by(MES_COTIZACION, MES_DATA)%>%
+  summarise(
+    n=n()
+    )%>%
+  ungroup()%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `num MES_DATA x COD_CLIENTE`
+```{r}
+gb_num_mes_data<-base3%>%
+  group_by(COD_CLIENTE, MES_DATA)%>%
+  summarise(
+    n=n()
+    )%>%
+  ungroup()%>%
+  group_by(COD_CLIENTE)%>%
+  summarise(
+    num_mes_data=n()
+  )
+
+gb_num_mes_data%>%
+  group_by(num_mes_data)%>%
+  summarise(
+    freq_n_mes_data=n()
+  )%>%
+  print(n=nrow(.))
+```
+
+```{r}
+gb_num_mes_data%>%
+  filter(num_mes_data>1)
+```
+
+```{r}
+base3%>%
+  filter(COD_CLIENTE%in%c("==BBVAPE10013115"))
+```
+
+```{r}
+base3<-base3%>%
+  mutate(
+    fh_cotizacion=as.character(MES_COTIZACION)
+  )
+base3%>%
+  select(MES_COTIZACION,fh_cotizacion)%>%
+  mutate(
+    fh_cotizacion=as.POSIXct(fh_cotizacion, format="%d/%m/%Y")
+  )%>%
+  group_by(MES_COTIZACION,fh_cotizacion)%>%
+  summarise(n=n())
+```
+```{r}
+library(lubridate)
+base3<-base3%>%
+  mutate(
+    fh_cotizacion=as.character(MES_COTIZACION),
+    fh_cotizacion=as.POSIXct(fh_cotizacion, format="%d/%m/%Y"),
+    mes_cot=month(fh_cotizacion),
+    anio_cot=year(fh_cotizacion),
+    
+    fh_data=as.character(MES_DATA),
+    fh_data=as.POSIXct(fh_data, format="%d/%m/%Y"),
+    mes_dat=month(fh_data),
+    anio_dat=year(fh_data)
+  )
+
+base3%>%
+  select(MES_COTIZACION,fh_cotizacion,mes_cot,anio_cot,MES_DATA,fh_data,mes_dat,anio_dat)
+```
+
+```{r}
+base3<-base3%>%
+  mutate(
+    aniomes_cot=(100*anio_cot) + mes_cot,
+    aniomes_dat=(100*anio_dat) + mes_dat,
+    I_cot_post_dat=if_else(aniomes_cot>=aniomes_dat,1,0)
+  )
+
+head(base3)
+base3%>%
+  group_by(I_cot_post_dat)%>%
+  summarise(n=n())
+
+# saveRDS(base3,"data/Base3.rds")
+```
+
+```{r}
+base3<-base3%>%
+  mutate(
+    tiempo_meses_cot_dat= 12*(anio_cot - anio_dat) + (mes_cot - mes_dat)
+  )
+
+base3%>%
+  group_by(tiempo_meses_cot_dat)%>%
+  summarise(n=n())
+
+# saveRDS(base3,"data/Base3.rds")
+```
+
+```{r}
+nombres_base3<-names(base3)
+nombres_base3_to_spread<-nombres_base3[!nombres_base3%in%c(
+  "MES_COTIZACION","MES_DATA","COD_CLIENTE",
+  "fh_cotizacion","mes_cot","anio_cot","aniomes_cot",
+  "fh_data","mes_dat","anio_dat","aniomes_dat",
+  "I_cot_post_dat","tiempo_meses_cot_dat"
+)]
+```
+
+
+#### `CTA_AHORRO`
+```{r}
+base3%>%
+  group_by(CTA_AHORRO)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `CTA_CTE`
+```{r}
+base3%>%
+  group_by(CTA_CTE)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `CTA_AHORRO`
+```{r}
+base3%>%
+  group_by(CTA_AHORRO)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
 
 
 ## base4
@@ -52,6 +408,60 @@ head(base4)
 - **Número de Clientes:** `r format(length(unique(base4$COD_CLIENTE)), nsmall=1, big.mark=",")`
 
 
+### Distribuciones {.tabset}
+
+#### `MES_COTIZACION`
+```{r}
+base4%>%
+  group_by(MES_COTIZACION)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `MES_DATA`
+```{r}
+base4%>%
+  group_by(MES_DATA)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `ST_CREDITO`
+```{r}
+base4%>%
+  group_by(ST_CREDITO)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `CD_BANCO`
+```{r}
+base4%>%
+  group_by(CD_BANCO)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
 ## base5
 ```{r}
 base5<-readRDS("data/Base5.rds")
@@ -61,3 +471,76 @@ head(base5)
 - **Número de filas:** `r format(nrow(base5), nsmall=1, big.mark=",")`
 
 - **Número de Clientes:** `r format(length(unique(base5$COD_CLIENTE)), nsmall=1, big.mark=",")`
+
+
+
+### Distribuciones {.tabset}
+
+#### `MES_COTIZACION`
+```{r}
+base5%>%
+  group_by(MES_COTIZACION)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `MES_DATA`
+```{r}
+base5%>%
+  group_by(MES_DATA)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+#### `CD_DIVISA`
+```{r}
+base5%>%
+  group_by(CD_DIVISA)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+
+#### `CNT_CONSUMOS`
+```{r}
+base5%>%
+  group_by(CNT_CONSUMOS)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
+
+
+#### `TP_TARJETA`
+```{r}
+base5%>%
+  group_by(TP_TARJETA)%>%
+  summarise(
+    n=n()
+    )%>%
+  mutate(
+    prop=round(n/sum(n),4)
+  )%>%
+  print(n=nrow(.))
+```
+
