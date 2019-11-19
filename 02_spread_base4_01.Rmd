@@ -1,0 +1,120 @@
+---
+title: "EDA - 01"
+subtitle: "Counting Rows & # Clients"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+# base4
+```{r}
+base4<-readRDS("data/Base4.rds")
+head(base4)
+```
+
+- **Número de filas:** `r format(nrow(base4), nsmall=1, big.mark=",")`
+
+- **Número de Clientes:** `r format(length(unique(base4$COD_CLIENTE)), nsmall=1, big.mark=",")`
+
+- **Número de Clientes + Mes Cotización:** `r format(nrow(base4%>%distinct(COD_CLIENTE,MES_COTIZACION)), nsmall=1, big.mark=",")`
+
+```{r}
+nombres_base4<-names(base4)
+nombres_base4
+```
+
+
+```{r}
+nombres_base4_to_spread<-nombres_base4[!nombres_base4%in%c(
+  "MES_COTIZACION","MES_DATA","COD_CLIENTE",
+  "fh_cotizacion","mes_cot","anio_cot","aniomes_cot",
+  "fh_data","mes_dat","anio_dat","aniomes_dat",
+  "I_cot_post_dat","tiempo_meses_cot_dat"
+)]
+nombres_base4_to_spread
+```
+
+
+```{r}
+base4a<-base4%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  # filter(row_number()==1)%>%
+  summarise(
+    anio_cot=unique(anio_cot),
+    mes_cot=unique(mes_cot),
+    numfhs_dat=length(unique(aniomes_dat)),
+    min_dat=min(aniomes_dat),
+    max_dat=max(aniomes_dat),
+    min_meses_dif=min(tiempo_meses_cot_dat),
+    max_meses=max(tiempo_meses_cot_dat)
+  )#%>%
+  # ungroup()
+
+saveRDS(base4a,"data/Base4a.rds")
+base4a
+```
+
+
+
+
+```{r}
+base4a_tmp%>%
+  ungroup()%>%
+  filter(COD_CLIENTE%in%c("==BBVAPE116964831"))
+```
+```{r}
+base4a_tmp%>%
+  ungroup()
+```
+
+
+```{r}
+# base4a<-readRDS("data/Base4a.rds")
+base4b<-base4a%>%
+  ungroup()
+print("---nombres_base4_to_spread")
+  for(idvar00 in 1:length(nombres_base4_to_spread)){
+    # idvar00<-2
+    var00<-nombres_base4_to_spread[idvar00]
+    print(paste0(">>>>>>>>>>",var00))
+    
+    base4a_tmp<-base4%>%
+      # filter(COD_CLIENTE%in%c("==BBVAPE116964831"))%>%
+      # mutate(var_tmp=)
+      mutate_(.dots = setNames(var00, "var_tmp"))%>%
+      select(
+        one_of(
+        c("COD_CLIENTE","aniomes_cot","aniomes_dat","tiempo_meses_cot_dat")
+        ),one_of(var00),var_tmp)%>%
+      mutate(
+        nombre_var_tmp=paste0(nombres_base4_to_spread[idvar00],"_mesesdat_m",tiempo_meses_cot_dat)#,
+        # nombre_var_tmp=paste0(var00,"_",var_tmp)
+        )%>%
+      spread(nombre_var_tmp,var_tmp,fill=-778899)%>%
+      select(-one_of(var00))%>%
+      group_by(COD_CLIENTE,aniomes_cot)%>%
+      summarise_at(vars(starts_with(var00)),max)
+    
+    print(sort(paste0(var00,"_",unlist(unique(base4$tiempo_meses_cot_dat)))))
+    
+    base4b<-base4b%>%
+      left_join(
+        base4a_tmp
+      )
+    
+    # saveRDS(catalogo_tmp03_vartmp,paste0("data/ciclos_ctlgos03_",aniomes_tmp,"_vartmp_",var00,".rds"))
+    
+    # length(unique(catalogo_tmp03_vartmp$CONTRATO))
+    
+  }
+
+length(nombres_base4_to_spread)*6+ncol(base4a); ncol(base4b)
+((length(nombres_base4_to_spread)*6)+ncol(base4a)) == ncol(base4b)
+saveRDS(base4b,"data/Base4b.rds")
+base4b
+```
+
