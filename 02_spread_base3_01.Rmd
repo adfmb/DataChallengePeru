@@ -1,0 +1,86 @@
+---
+title: "EDA - 01"
+subtitle: "Counting Rows & # Clients"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+# base3
+```{r}
+base3<-readRDS("data/Base3.rds")
+head(base3)
+```
+
+- **Número de filas:** `r format(nrow(base3), nsmall=1, big.mark=",")`
+
+- **Número de Clientes:** `r format(length(unique(base3$COD_CLIENTE)), nsmall=1, big.mark=",")`
+
+- **Número de Clientes + Mes Cotización:** `r format(nrow(base3%>%distinct(COD_CLIENTE,MES_COTIZACION)), nsmall=1, big.mark=",")`
+
+```{r}
+nombres_base3<-names(base3)
+nombres_base3
+```
+
+
+```{r}
+nombres_base3_to_spread<-nombres_base3[!nombres_base3%in%c(
+  "MES_COTIZACION","MES_DATA","COD_CLIENTE",
+  "fh_cotizacion","mes_cot","anio_cot","aniomes_cot",
+  "fh_data","mes_dat","anio_dat","aniomes_dat",
+  "I_cot_post_dat","tiempo_meses_cot_dat"
+)]
+nombres_base3_to_spread
+```
+
+
+```{r}
+base3a<-base3
+```
+
+```{r}
+print("---nombres_base3_to_spread")
+  for(idvar00 in 1:length(nombres_base3_to_spread)){
+    # idvar00<-1
+    var00<-nombres_base3_to_spread[idvar00]
+    print(paste0(">>>>>>>>>>",var00))
+    
+    # lista_x<-list(var00,)
+    
+    base3a_tmp<-base3a%>%
+      # mutate(var_tmp=)
+      mutate_(.dots = setNames(var00, "var_tmp"))%>%
+      select(
+        one_of(
+        c("COD_CLIENTE","aniomes_cot","aniomes_dat","tiempo_meses_cot_dat")
+        ),one_of(var00),var_tmp)%>%
+      mutate(
+        nombre_var_tmp=paste0(nombres_base3_to_spread[idvar00],"_",tiempo_meses_cot_dat)#,
+        # nombre_var_tmp=paste0(var00,"_",var_tmp)
+        )%>%
+      spread(nombre_var_tmp,var_tmp,fill=-778899)%>%
+      select(-one_of(var00))
+    
+    print(paste0(var00,"_",unlist(unique(catalogo_tmp03[var00]))))
+    
+    catalogo_tmp03<-catalogo_tmp03%>%
+      # select(-one_of(var00))%>%
+      left_join(
+        catalogo_tmp03_vartmp,
+        by=c("CONTRATO"="CONTRATO","aniomes_actual_ciclo"="aniomes_actual_ciclo")
+      )#%>%
+      # select(starts_with(var00))
+    
+    saveRDS(catalogo_tmp03_vartmp,paste0("data/ciclos_ctlgos03_",aniomes_tmp,"_vartmp_",var00,".rds"))
+    
+    # length(unique(catalogo_tmp03_vartmp$CONTRATO))
+    
+  }
+```
+
+
