@@ -1,0 +1,225 @@
+---
+title: "EDA - 01"
+subtitle: "Counting Rows & # Clients"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+# base5
+```{r}
+base5<-readRDS("data/Base5.rds")
+head(base5,10)
+```
+
+- **Número de filas:** `r format(nrow(base5), nsmall=1, big.mark=",")`
+
+- **Número de Clientes:** `r format(length(unique(base5$COD_CLIENTE)), nsmall=1, big.mark=",")`
+
+- **Número de Clientes + Mes Cotización:** `r format(nrow(base5%>%distinct(COD_CLIENTE,MES_COTIZACION)), nsmall=1, big.mark=",")`
+
+
+<!-- ```{r} -->
+<!-- base5<-base5%>% -->
+<!--   mutate( -->
+<!--     CD_DIVISA=paste0("CD_DIVISA_",CD_DIVISA), -->
+<!--     TP_TARJETA=paste0("TP_TARJETA_",TP_TARJETA), -->
+<!--     I_CD_Divisa=1, -->
+<!--     I_TP_Tarjeta=1 -->
+<!--     )%>% -->
+<!--   spread(CD_DIVISA,I_CD_Divisa,fill=0)%>% -->
+<!--   spread(TP_TARJETA,I_TP_Tarjeta,fill = 0) -->
+<!-- base5%>% -->
+<!--   select(-one_of( -->
+<!--     c( -->
+<!--       # "MES_COTIZACION","MES_DATA","COD_CLIENTE", -->
+<!--       "fh_cotizacion","mes_cot","anio_cot","aniomes_cot", -->
+<!--       "fh_data","mes_dat","anio_dat","aniomes_dat", -->
+<!--       "I_cot_post_dat","tiempo_meses_cot_dat" -->
+<!--       ) -->
+<!--     )) -->
+<!-- ``` -->
+
+```{r}
+base5%>% #[c(84643,87581),]
+  filter(COD_CLIENTE=="==BBVAPE100758081")%>%
+  select(aniomes_cot,aniomes_dat,CD_DIVISA,TP_TARJETA)
+```
+
+```{r}
+base5_gb01<-base5%>%
+  group_by(COD_CLIENTE,aniomes_cot,aniomes_dat)%>%
+  summarise(n=n())
+
+base5_gb01%>%
+  ungroup()%>%
+  group_by(n)%>%
+  summarise(freq_n=n())
+```
+
+```{r}
+base5_02<-base5_gb01%>%
+  left_join(base5)
+
+base5_02%>%
+  filter(n>1)
+```
+
+```{r}
+# BBVAPE10013115
+base5_03<-base5%>%
+  filter(COD_CLIENTE=="==BBVAPE10013115")%>%
+  mutate(
+    DIVISA_TARJETA_rngimporte=paste0("RNG_IMPORTE_",CD_DIVISA,"_",TP_TARJETA),
+    DIVISA_TARJETA_cntconsumos=paste0("CNT_CONSUMOS_",CD_DIVISA,"_",TP_TARJETA)
+    )%>%
+  select(COD_CLIENTE,aniomes_cot,aniomes_dat,CD_DIVISA,TP_TARJETA,DIVISA_TARJETA_rngimporte,DIVISA_TARJETA_cntconsumos,RNG_IMPORTE,CNT_CONSUMOS)%>%
+  spread(DIVISA_TARJETA_rngimporte,RNG_IMPORTE,fill=-778899)%>%
+  spread(DIVISA_TARJETA_cntconsumos,CNT_CONSUMOS,fill = -778899)%>%
+  select(-CD_DIVISA,-TP_TARJETA)%>%
+  group_by(COD_CLIENTE,aniomes_cot,aniomes_dat)%>%
+  # group_by(COD_CLIENTE,aniomes_cot,aniomes_dat,tiempo_meses_cot_dat,mes_cot,anio_cot,mes_dat,anio_dat)%>%
+  summarise_at(vars(starts_with(var00)),max)
+
+base5_03
+```
+
+
+```{r}
+base5_02%>%
+  ungroup()%>%
+  filter(n==4 | COD_CLIENTE=="==BBVAPE107918013")
+```
+
+```{r}
+# BBVAPE107918013
+base5_03<-base5%>%
+  filter(COD_CLIENTE=="==BBVAPE107918013")%>%
+  mutate(
+    DIVISA_TARJETA_rngimporte=paste0("RNG_IMPORTE_",CD_DIVISA,"_",TP_TARJETA),
+    DIVISA_TARJETA_cntconsumos=paste0("CNT_CONSUMOS_",CD_DIVISA,"_",TP_TARJETA)
+    )%>%
+  # select(COD_CLIENTE,aniomes_cot,aniomes_dat,CD_DIVISA,TP_TARJETA,DIVISA_TARJETA_rngimporte,DIVISA_TARJETA_cntconsumos,RNG_IMPORTE,CNT_CONSUMOS)%>%
+  spread(DIVISA_TARJETA_rngimporte,RNG_IMPORTE,fill=-778899)%>%
+  spread(DIVISA_TARJETA_cntconsumos,CNT_CONSUMOS,fill = -778899)%>%
+  select(-CD_DIVISA,-TP_TARJETA)%>%
+  # group_by(COD_CLIENTE,aniomes_cot,aniomes_dat)%>%
+  group_by(COD_CLIENTE,aniomes_cot,aniomes_dat,tiempo_meses_cot_dat,mes_cot,anio_cot,mes_dat,anio_dat)%>%
+  summarise_at(vars(starts_with("RNG_IMPORTE_"),starts_with("CNT_CONSUMOS_")),max)
+
+base5_03
+```
+
+
+
+```{r}
+# 
+base5_03<-base5%>%
+  # filter(COD_CLIENTE=="==BBVAPE107918013")%>%
+  mutate(
+    DIVISA_TARJETA_rngimporte=paste0("RNG_IMPORTE_",CD_DIVISA,"_",TP_TARJETA),
+    DIVISA_TARJETA_cntconsumos=paste0("CNT_CONSUMOS_",CD_DIVISA,"_",TP_TARJETA)
+    )%>%
+  # select(COD_CLIENTE,aniomes_cot,aniomes_dat,CD_DIVISA,TP_TARJETA,DIVISA_TARJETA_rngimporte,DIVISA_TARJETA_cntconsumos,RNG_IMPORTE,CNT_CONSUMOS)%>%
+  spread(DIVISA_TARJETA_rngimporte,RNG_IMPORTE,fill=-778899)%>%
+  spread(DIVISA_TARJETA_cntconsumos,CNT_CONSUMOS,fill = -778899)%>%
+  select(-CD_DIVISA,-TP_TARJETA)%>%
+  # group_by(COD_CLIENTE,aniomes_cot,aniomes_dat)%>%
+  group_by(COD_CLIENTE,aniomes_cot,aniomes_dat,tiempo_meses_cot_dat,mes_cot,anio_cot,mes_dat,anio_dat)%>%
+  summarise_at(vars(starts_with("RNG_IMPORTE_"),starts_with("CNT_CONSUMOS_")),max)
+
+saveRDS(base5_03,"data/Base5_03.rds")
+base5_03
+```
+
+
+
+```{r}
+nombres_base5_03<-names(base5_03)
+nombres_base5_03
+```
+
+
+```{r}
+nombres_base5_03_to_spread<-nombres_base5_03[!nombres_base5_03%in%c(
+  "MES_COTIZACION","MES_DATA","COD_CLIENTE",
+  "fh_cotizacion","mes_cot","anio_cot","aniomes_cot",
+  "fh_data","mes_dat","anio_dat","aniomes_dat",
+  "I_cot_post_dat","tiempo_meses_cot_dat"
+)]
+nombres_base5_03_to_spread
+```
+
+
+```{r}
+base5a<-base5_03%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  # filter(row_number()==1)%>%
+  summarise(
+    anio_cot=unique(anio_cot),
+    mes_cot=unique(mes_cot),
+    numfhs_dat=length(unique(aniomes_dat)),
+    min_dat=min(aniomes_dat),
+    max_dat=max(aniomes_dat),
+    min_meses_dif=min(tiempo_meses_cot_dat),
+    max_meses=max(tiempo_meses_cot_dat)
+  )#%>%
+  # ungroup()
+
+saveRDS(base5a,"data/Base5a.rds")
+base5a
+```
+
+
+```{r}
+# base5a<-readRDS("data/Base5a.rds")
+base5b<-base5a%>%
+  ungroup()
+print("---nombres_base5_03_to_spread")
+  for(idvar00 in 1:length(nombres_base5_03_to_spread)){
+    # idvar00<-2
+    var00<-nombres_base5_03_to_spread[idvar00]
+    print(paste0(">>>>>>>>>>",var00))
+    
+    base5a_tmp<-base5_03%>%
+      ungroup()%>%
+      # filter(COD_CLIENTE%in%c("==BBVAPE116964831"))%>%
+      # mutate(var_tmp=)
+      mutate_(.dots = setNames(var00, "var_tmp"))%>%
+      select(
+        one_of(
+        c("COD_CLIENTE","aniomes_cot","aniomes_dat","tiempo_meses_cot_dat")
+        ),one_of(var00),var_tmp)%>%
+      mutate(
+        nombre_var_tmp=paste0(nombres_base5_03_to_spread[idvar00],"_mesesdat_m",tiempo_meses_cot_dat)#,
+        # nombre_var_tmp=paste0(var00,"_",var_tmp)
+        )%>%
+      spread(nombre_var_tmp,var_tmp,fill=-778899)%>%
+      select(-one_of(var00))%>%
+      group_by(COD_CLIENTE,aniomes_cot)%>%
+      summarise_at(vars(starts_with(var00)),max)
+    
+    print(sort(paste0(var00,"_",unlist(unique(base5$tiempo_meses_cot_dat)))))
+    
+    base5b<-base5b%>%
+      left_join(
+        base5a_tmp
+      )
+    
+    # saveRDS(catalogo_tmp03_vartmp,paste0("data/ciclos_ctlgos03_",aniomes_tmp,"_vartmp_",var00,".rds"))
+    
+    # length(unique(catalogo_tmp03_vartmp$CONTRATO))
+    
+  }
+
+length(nombres_base5_03_to_spread)*6+ncol(base5a); ncol(base5b)
+((length(nombres_base5_03_to_spread)*6)+ncol(base5a)) == ncol(base5b)
+saveRDS(base5b,"data/Base5b.rds")
+base5b
+```
+
+
