@@ -59,6 +59,44 @@ for(i in 1:length(lista_archivos_csv)){
 ```
 
 ```{r}
+base4_csv<-read.csv(paste0("data/Base4.csv"),header = T,sep = ";")
+head(base4_csv)
+```
 
+```{r}
+base4_rds<-base4_csv%>%
+  mutate_at(vars(starts_with("RNG_")),function(x){x[is.na(x)]<-(667788*-1); return(x)})
+
+head(base4_rds)
+sum(is.na(base4_csv));sum(base4_rds==-667788,na.rm = T);sum(is.na(base4_rds));sum(base4_rds==-667788,na.rm = T)+sum(is.na(base4_rds))
+```
+
+```{r}
+vec_nas_base4_rds<-base4_rds%>%
+  summarise_all(function(x){sum(is.na(x))})
+vec_nas_base4_rds
+```
+
+
+```{r}
+sum(is.na(base4_csv$ST_CREDITO))
+```
+
+
+```{r}
+names(base4_csv)
+```
+
+
+```{r}
+base4_rds<-base4_csv%>%
+  mutate_at(vars(-one_of(c("MES_COTIZACION","MES_DATA","COD_CLIENTE","CD_BANCO"))),
+            function(x){x[is.na(x)]<-(667788*-1); return(x)})
+
+head(base4_rds)
+sum(is.na(base4_csv));sum(base4_rds==-667788);sum(is.na(base4_rds));sum(base4_rds==-667788)+sum(is.na(base4_rds))
+```
+```{r}
+saveRDS(base4_rds%>%as_data_frame(),paste0("data/Base4.rds"))
 ```
 
