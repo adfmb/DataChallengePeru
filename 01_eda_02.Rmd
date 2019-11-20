@@ -529,7 +529,7 @@ base4%>%
   summarise(n=n())
 ```
 ```{r}
-library(lubridate)
+# library(lubridate)
 base4<-base4%>%
   mutate(
     fh_cotizacion=as.character(MES_COTIZACION),
