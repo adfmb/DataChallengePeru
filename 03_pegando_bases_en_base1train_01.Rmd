@@ -278,42 +278,43 @@ nombres_base00_01<-nombres_base00[!nombres_base00%in%c(
 nombres_base00_01[!grepl("RNG",nombres_base00_01)]
 ```
 
-
 ```{r}
-clases<-as.data.frame(base00)%>%
-  mutate(fh_cotizacion=as.character(fh_cotizacion))%>%
-  summarise_all(class)#apply(head(base00),1,class)
-df_clases<-data_frame(
-  "campos"=names(base00),
-  "clase"=clases
-)
-df_clases
+base01<-base00%>%
+  ungroup()%>%
+  mutate_at(
+    vars(nombres_base00_01),
+    function(x){
+      x<-as.numeric(as.character(x))
+      x[is.na(x)]<-556677*(-1)
+      return(x)
+    }
+  )
+
+sum(is.na(as.data.frame(
+  base00%>%ungroup()%>%select(one_of(nombres_base00_01))
+  ))); sum(as.data.frame(
+    base01%>%select(one_of(nombres_base00_01))
+    )==-556677)
 ```
 
-```{r}
-base00_train<-base00%>%
-          filter(muestra=="train")
-saveRDS(base00_train,"base00_train.rds")
-```
 
 ```{r}
-base00_test<-base00%>%
-          filter(muestra=="test")
-saveRDS(base00_test,"base00_test.rds")
+saveRDS(nombres_base00_01,"vars_to_numeric_base00_01.rds")
+saveRDS(base01,"base01.rds")
 ```
 
 
 
 # Dividiendo Base00 en train & test
 ```{r}
-base00_train<-base00%>%
+base01_train<-base01%>%
           filter(muestra=="train")
-saveRDS(base00_train,"base00_train.rds")
+saveRDS(base00_train,"base01_train.rds")
 ```
 
 ```{r}
-base00_test<-base00%>%
+base01_test<-base01%>%
           filter(muestra=="test")
-saveRDS(base00_test,"base00_test.rds")
+saveRDS(base00_test,"base01_test.rds")
 ```
 
