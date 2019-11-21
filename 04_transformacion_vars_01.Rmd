@@ -1,0 +1,236 @@
+---
+title: "Transformación de variables en Base01"
+subtitle: 
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+```{r}
+base01<-readRDS("data/base01.rds")
+head(base01%>%
+       select(COD_CLIENTE,anio_cot,aniomes_cot,COD_SOL,one_of(names(.)[!names(.)%in%c("COD_CLIENTE","aniomes_cot","anio_cot","COD_SOL")])))
+```
+
+# Variables `factor` to `spread`
+```{r}
+vars_factor_spread<-c("GARANTIA","SEXO","ESTADO_CIVIL","REGION")
+vars_factor_spread
+```
+
+## Distribuciones
+```{r}
+base01%>%
+  group_by_(.dots = vars_factor_spread)%>%
+  summarise(n=n())
+```
+
+### `r vars_factor_spread[1]`
+```{r}
+base01%>%
+  group_by_(.dots = vars_factor_spread[1])%>%
+  summarise(n=n())
+```
+
+### `r vars_factor_spread[2]`
+```{r}
+base01%>%
+  group_by_(.dots = vars_factor_spread[2])%>%
+  summarise(n=n())
+```
+
+### `r vars_factor_spread[3]`
+```{r}
+base01%>%
+  group_by_(.dots = vars_factor_spread[3])%>%
+  summarise(n=n())
+```
+
+### `r vars_factor_spread[4]`
+```{r}
+base01%>%
+  group_by_(.dots = vars_factor_spread[4])%>%
+  summarise(n=n())
+```
+
+## Contando `NA`s en esos campos
+```{r}
+sum(is.na(
+  as.data.frame(
+    base01%>%
+      select(one_of(vars_factor_spread))
+  )
+))
+  
+```
+
+## Contando `vacíos`s en esos campos
+```{r}
+sum(
+  as.data.frame(
+    base01%>%
+      select(one_of(vars_factor_spread))
+  )==""
+)
+  
+```
+
+## Convirtiendo a `character`
+```{r}
+base01<-base01%>%
+  mutate_at(vars(vars_factor_spread),as.character)
+```
+
+## Pasando `vacíos` a valor especial `"-556677"`
+
+```{r}
+base02<-base01%>%
+  mutate_at(
+    vars(vars_factor_spread),
+    function(x){
+      x<-if_else(x=="","-556677",x)
+      return(x)
+    }
+  )
+
+
+sum(
+  as.data.frame(
+    base01%>%
+      select(one_of(vars_factor_spread))
+  )==""
+);
+sum(
+  as.data.frame(
+    base02%>%
+      select(one_of(vars_factor_spread))
+  )=="-556677"
+)
+```
+
+
+**Vars numéricas de `Base01`**
+```{r}
+nombres_base00_01<-readRDS("data/vars_to_numeric_base00_01.rds")
+nombres_base00_01[!grepl("RNG",nombres_base00_01)]
+```
+
+
+```{r}
+
+```
+
+
+
+
+## `spread`
+
+```{r}
+base02%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  summarise(
+    num_sols=n()
+  )%>%
+  arrange(desc(num_sols))
+```
+```{r}
+base02%>%
+  group_by(COD_CLIENTE)%>%
+  summarise(
+    num=n(),
+    num_fhs_cot=length(unique(aniomes_cot)),
+    tipos_garantia=length(unique(GARANTIA))
+  )%>%
+  arrange(desc(tipos_garantia),desc(num))
+```
+
+```{r}
+base02a<-base02%>%
+  select(-one_of(vars_factor_spread))
+
+print("---vars_factor_spread")
+  for(idvar00 in 1:length(vars_factor_spread)){
+    # idvar00<-1
+    var00<-vars_factor_spread[idvar00]
+    print(paste0(">>>>>>>>>>",var00))
+    
+    base02a_tmp<-base02%>%
+      ungroup()%>%
+      # filter(COD_CLIENTE%in%c("==BBVAPE185727711"))%>%
+      # mutate(var_tmp=)
+      mutate_(.dots = setNames(var00, "var_tmp"))%>%
+      select(
+        one_of(
+        c("COD_CLIENTE","aniomes_cot","COD_SOL")
+        ),one_of(var00),var_tmp)%>%
+      mutate(
+        nombre_var_tmp=paste0(vars_factor_spread[idvar00],"_",var_tmp),
+        I_vartmp=1
+        # nombre_var_tmp=paste0(var00,"_",var_tmp)
+        )%>%
+      spread(nombre_var_tmp,I_vartmp,fill=-778899)%>%#,var_tmp,fill=-778899)%>%
+      select(-one_of(var00))%>%
+      group_by(COD_CLIENTE,aniomes_cot,COD_SOL)%>%
+      summarise_at(vars(starts_with(var00)),max)
+    
+    # print(sort(paste0(var00,"_",unlist(unique(base4$tiempo_meses_cot_dat)))))
+    
+    base02a<-base02a%>%
+      left_join(
+        base02a_tmp
+      )
+    
+    # saveRDS(catalogo_tmp03_vartmp,paste0("data/ciclos_ctlgos03_",aniomes_tmp,"_vartmp_",var00,".rds"))
+    
+    # length(unique(catalogo_tmp03_vartmp$CONTRATO))
+    
+  }
+
+# length(vars_factor_spread)*6+ncol(base4a); ncol(base4b)
+# ((length(vars_factor_spread)*6)+ncol(base4a)) == ncol(base4b)
+saveRDS(base02a,"data/base02a.rds")
+head(base02a)
+```
+
+
+
+# Variables a nivel Cliente + Mes de Cotización
+```{r}
+base01%>%
+  group_by(COD_SOL)%>%
+  summarise(n=n())%>%
+  group_by(n)%>%
+  summarise(frew_n=n())
+```
+
+```{r}
+base01%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  summarise(
+    n_COD_SOL=length(unique(COD_SOL)),
+    n=n()
+    )%>%
+  group_by(n_COD_SOL)%>%
+  summarise(freq_n=n())
+```
+
+```{r}
+base01_cte_cot<-base01%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  arrange(COD_CLIENTE,aniomes_cot,FLG_DESEMBOLSO)
+
+```
+
+```{r}
+base01_cte_cot_01<-base01_cte_cot%>%
+  mutate(
+    id_solicitud_mes=row_number(),
+    max_importe_acum=cummax(IMPORTE)
+  )
+```
+
+
