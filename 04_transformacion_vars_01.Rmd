@@ -240,11 +240,239 @@ base02a_cte_cot<-base02a%>%
 ```
 
 ```{r}
+
 base02a_cte_cot_01<-base02a_cte_cot%>%
   mutate(
     id_solicitud_mes=row_number(),
-    max_importe_acum=cummax(IMPORTE)
+    max_importe_mes_acum=cummax(IMPORTE),
+    min_importe_mes_acum=cummin(IMPORTE),
+    max_plazo_mes_acum=cummax(PLAZO),
+    min_plazo_mes_acum=cummin(PLAZO),
+    max_tea_mes_acum=cummax(TEA_MINIMA),
+    min_tea_mes_acum=cummin(TEA_MINIMA),
+    
+    I_ultima_solicitud_mes=if_else(id_solicitud_mes==max(id_solicitud_mes),1,0),  ## O O O J O O O    C O N    E S T A    V A R I A B L E
+    
+    I_importe_menor_vs_maxacum_del_mes=if_else(IMPORTE<max_importe_mes_acum,1,0),
+    I_plazo_menor_vs_maxacum_del_mes=if_else(PLAZO<max_plazo_mes_acum,1,0),
+    I_tea_menor_vs_maxacum_del_mes=if_else(TEA_MINIMA<max_tea_mes_acum,1,0),
+    
+    I_importe_mayor_vs_minacum_del_mes=if_else(IMPORTE>min_importe_mes_acum,1,0),
+    I_plazo_mayor_vs_minacum_del_mes=if_else(PLAZO>min_plazo_mes_acum,1,0),
+    I_tea_mayor_vs_minacum_del_mes=if_else(TEA_MINIMA>min_tea_mes_acum,1,0),
+    
+    I_importe_igual_al_maxacum_del_mes=if_else(IMPORTE==max_importe_mes_acum,1,0),
+    I_plazo_igual_al_maxacum_del_mes=if_else(PLAZO==max_plazo_mes_acum,1,0),
+    I_tea_igual_al_maxacum_del_mes=if_else(TEA_MINIMA==max_tea_mes_acum,1,0),
+    
+    I_importe_igual_vs_minacum_del_mes=if_else(IMPORTE==min_importe_mes_acum,1,0),
+    I_plazo_igual_al_minacum_del_mes=if_else(PLAZO==min_plazo_mes_acum,1,0),
+    I_tea_igual_al_minacum_del_mes=if_else(TEA_MINIMA==min_tea_mes_acum,1,0)
   )
+
+base02a_cte_cot_01%>%
+  select(COD_CLIENTE,aniomes_cot,COD_SOL,id_solicitud_mes,I_ultima_solicitud_mes,IMPORTE,PLAZO,TEA_MINIMA,ends_with("_del_mes"),ends_with("_acum"))
+```
+
+```{r}
+# saveRDS(base02a_cte_cot_01,"data/base02a_cte_cot_01.rds")
+```
+
+# Variables a nivel Cliente + Año de Cotización
+```{r}
+base02a_cte_aniocot<-base02a_cte_cot_01%>%
+  summarise(
+    anio_cot=unique(anio_cot),
+    mes_cot=unique(mes_cot)
+  )%>%
+  ungroup()%>%
+  group_by(COD_CLIENTE,anio_cot)%>%
+  arrange(COD_CLIENTE,anio_cot,mes_cot)%>%
+  mutate(
+    id_mes_del_anio=row_number(),
+    I_ultimo_mes_del_anio=if_else(id_mes_del_anio==max(id_mes_del_anio),1,0) ## O O O J O O O    C O N    E S T A    V A R I A B L E
+  )%>%
+  ungroup()%>%
+  select(-anio_cot,-mes_cot)%>%
+  right_join(
+    base02a_cte_cot_01%>%
+      ungroup()
+  )%>%
+  group_by(COD_CLIENTE,anio_cot)%>%
+  arrange(COD_CLIENTE,anio_cot,mes_cot,FLG_DESEMBOLSO) # que `FLG_DESEMBOLSO==1` vaya a lo último de cada mes de cotización
+head(base02a_cte_aniocot%>%
+       select(COD_CLIENTE,aniomes_cot,starts_with("id_"),starts_with("I_"),ends_with("_acum"),ends_with("_del_mes"),
+              one_of(names(.)[!names(.)%in%c(
+                "COD_CLIENTE","aniomes_cot",
+                starts_with("id_"),starts_with("I_"),ends_with("_acum"),ends_with("_del_mes"))]
+                )
+              ))
+```
+
+```{r}
+# saveRDS(base02a_cte_aniocot,"data/base02a_cte_aniocot.rds")
+```
+
+# Variables a nivel Cliente
+
+## Distribución de número de solicitudes por mes por Cliente
+```{r}
+base01%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  summarise(num_sol=n())%>%
+  ungroup()%>%
+  group_by(num_sol)%>%
+  summarise(freq_numsol=n())%>%
+  mutate(prop=round(freq_numsol/sum(freq_numsol),4))%>%
+  arrange(desc(num_sol))
+```
+
+- Los casos de más de 4 solicitudes por mes son menos del *3%* en total y donde, cada caso, representa menos del *1%*.
+
+## Distribución de número meses por Cliente
+```{r}
+base01%>%
+  group_by(COD_CLIENTE)%>%
+  summarise(num_meses=length(unique(aniomes_cot)))%>%
+  ungroup()%>%
+  group_by(num_meses)%>%
+  summarise(freq_num_meses=n())%>%
+  mutate(prop=round(freq_num_meses/sum(freq_num_meses),4))%>%
+  arrange(desc(num_meses))
+```
+
+- Los casos de más de 3 meses con solicitudes son menos del *2%* en total y donde, cada caso, representa menos del *1%*.
+
+## Distribución de número de solicitudes totales por Cliente
+```{r}
+base01%>%
+  group_by(COD_CLIENTE)%>%
+  summarise(num_sol=n())%>%
+  ungroup()%>%
+  group_by(num_sol)%>%
+  summarise(freq_numsol=n())%>%
+  mutate(prop=round(freq_numsol/sum(freq_numsol),4))%>%
+  arrange(desc(num_sol))
+```
+
+- Los casos de más de 4 solicitudes en total son menos del *3%* en total y donde, cada caso, representa menos del *1%*.
+
+- Por lo tanto, viendo las últimas 4 solicitudes del cliente previas a la actual, sería más que suficiente
+
+## Variables nivel Cliente
+```{r}
+base02a_cte<-base02a_cte_aniocot%>%
+  ungroup()%>%
+  group_by(COD_CLIENTE)%>%
+  arrange(COD_CLIENTE,anio_cot,mes_cot,FLG_DESEMBOLSO)%>% # que `FLG_DESEMBOLSO==1` vaya a lo último de cada mes de cotización)%>%
+  mutate(
+    id_solicitud_del_cte=row_number(),
+    I_ult_solicitud_del_cte=if_else(id_solicitud_del_cte==max(id_solicitud_del_cte),1,0),
+    
+    max_importe_cte_acum=cummax(IMPORTE),
+    min_importe_cte_acum=cummin(IMPORTE),
+    max_plazo_cte_acum=cummax(PLAZO),
+    min_plazo_cte_acum=cummin(PLAZO),
+    max_tea_cte_acum=cummax(TEA_MINIMA),
+    min_tea_cte_acum=cummin(TEA_MINIMA),
+    
+    I_importe_menor_vs_maxacum_del_cte=if_else(IMPORTE<max_importe_cte_acum,1,0),
+    I_plazo_menor_vs_maxacum_del_cte=if_else(PLAZO<max_plazo_cte_acum,1,0),
+    I_tea_menor_vs_maxacum_del_cte=if_else(TEA_MINIMA<max_tea_cte_acum,1,0),
+    
+    I_importe_mayor_vs_minacum_del_cte=if_else(IMPORTE>min_importe_cte_acum,1,0),
+    I_plazo_mayor_vs_minacum_del_cte=if_else(PLAZO>min_plazo_cte_acum,1,0),
+    I_tea_mayor_vs_minacum_del_cte=if_else(TEA_MINIMA>min_tea_cte_acum,1,0),
+    
+    I_importe_igual_al_maxacum_del_cte=if_else(IMPORTE==max_importe_cte_acum,1,0),
+    I_plazo_igual_al_maxacum_del_cte=if_else(PLAZO==max_plazo_cte_acum,1,0),
+    I_tea_igual_al_maxacum_del_cte=if_else(TEA_MINIMA==max_tea_cte_acum,1,0),
+    
+    I_importe_igual_vs_minacum_del_cte=if_else(IMPORTE==min_importe_cte_acum,1,0),
+    I_plazo_igual_al_minacum_del_cte=if_else(PLAZO==min_plazo_cte_acum,1,0),
+    I_tea_igual_al_minacum_del_cte=if_else(TEA_MINIMA==min_tea_cte_acum,1,0),
+    
+    # max_importe_cte=max(IMPORTE),
+    # min_importe_cte=min(IMPORTE),
+    # max_plazo_cte=max(PLAZO),
+    # min_plazo_cte=min(PLAZO),
+    # max_tea_cte=max(TEA_MINIMA),
+    # min_tea_cte=min(TEA_MINIMA)
+    
+    # num_exitos=cumsum()
+    
+    IMPORTE_m1=lag(IMPORTE,n = 1,default = -667788),
+    PLAZO_m1=lag(PLAZO,n = 1,default = -667788),
+    TEA_MINIMA_m1=lag(TEA_MINIMA,n = 1,default = -667788),
+    
+    IMPORTE_m2=lag(IMPORTE,n = 2,default = -667788),
+    PLAZO_m2=lag(PLAZO,n = 2,default = -667788),
+    TEA_MINIMA_m2=lag(TEA_MINIMA,n = 2,default = -667788),
+    
+    IMPORTE_m3=lag(IMPORTE,n = 3,default = -667788),
+    PLAZO_m3=lag(PLAZO,n = 3,default = -667788),
+    TEA_MINIMA_m3=lag(TEA_MINIMA,n = 3,default = -667788),
+    
+    IMPORTE_m4=lag(IMPORTE,n = 4,default = -667788),
+    PLAZO_m4=lag(PLAZO,n = 4,default = -667788),
+    TEA_MINIMA_m4=lag(TEA_MINIMA,n = 4,default = -667788),
+    
+    I_baja_importe_vs_m1=if_else(IMPORTE_m1!=-667788 & IMPORTE<IMPORTE_m1,1,0),
+    I_baja_plazo_vs_m1=if_else(PLAZO_m1!=-667788 & PLAZO<PLAZO_m1,1,0),
+    I_baja_tasa_vs_m1=if_else(TEA_MINIMA_m1!=-667788 & TEA_MINIMA<TEA_MINIMA_m1,1,0),
+    
+    I_baja_importe_vs_m2=if_else(IMPORTE_m2!=-667788 & IMPORTE<IMPORTE_m2,1,0),
+    I_baja_plazo_vs_m2=if_else(PLAZO_m2!=-667788 & PLAZO<PLAZO_m2,1,0),
+    I_baja_tasa_vs_m2=if_else(TEA_MINIMA_m2!=-667788 & TEA_MINIMA<TEA_MINIMA_m2,1,0),
+    
+    I_baja_importe_vs_m3=if_else(IMPORTE_m3!=-667788 & IMPORTE<IMPORTE_m3,1,0),
+    I_baja_plazo_vs_m3=if_else(PLAZO_m3!=-667788 & PLAZO<PLAZO_m3,1,0),
+    I_baja_tasa_vs_m3=if_else(TEA_MINIMA_m3!=-667788 & TEA_MINIMA<TEA_MINIMA_m3,1,0),
+    
+    I_baja_importe_vs_m4=if_else(IMPORTE_m4!=-667788 & IMPORTE<IMPORTE_m4,1,0),
+    I_baja_plazo_vs_m4=if_else(PLAZO_m4!=-667788 & PLAZO<PLAZO_m4,1,0),
+    I_baja_tasa_vs_m4=if_else(TEA_MINIMA_m4!=-667788 & TEA_MINIMA<TEA_MINIMA_m4,1,0),
+    
+    I_sube_importe_vs_m1=if_else(IMPORTE_m1!=-667788 & IMPORTE>IMPORTE_m1,1,0),
+    I_sube_plazo_vs_m1=if_else(PLAZO_m1!=-667788 & PLAZO>PLAZO_m1,1,0),
+    I_sube_tasa_vs_m1=if_else(TEA_MINIMA_m1!=-667788 & TEA_MINIMA>TEA_MINIMA_m1,1,0),
+    
+    I_sube_importe_vs_m2=if_else(IMPORTE_m2!=-667788 & IMPORTE>IMPORTE_m2,1,0),
+    I_sube_plazo_vs_m2=if_else(PLAZO_m2!=-667788 & PLAZO>PLAZO_m2,1,0),
+    I_sube_tasa_vs_m2=if_else(TEA_MINIMA_m2!=-667788 & TEA_MINIMA>TEA_MINIMA_m2,1,0),
+    
+    I_sube_importe_vs_m3=if_else(IMPORTE_m3!=-667788 & IMPORTE>IMPORTE_m3,1,0),
+    I_sube_plazo_vs_m3=if_else(PLAZO_m3!=-667788 & PLAZO>PLAZO_m3,1,0),
+    I_sube_tasa_vs_m3=if_else(TEA_MINIMA_m3!=-667788 & TEA_MINIMA>TEA_MINIMA_m3,1,0),
+    
+    I_sube_importe_vs_m4=if_else(IMPORTE_m4!=-667788 & IMPORTE>IMPORTE_m4,1,0),
+    I_sube_plazo_vs_m4=if_else(PLAZO_m4!=-667788 & PLAZO>PLAZO_m4,1,0),
+    I_sube_tasa_vs_m4=if_else(TEA_MINIMA_m4!=-667788 & TEA_MINIMA>TEA_MINIMA_m4,1,0)
+    
+    
+  )
+head(base02a_cte%>%
+       select(COD_CLIENTE,aniomes_cot,starts_with("id_"),starts_with("I_"),ends_with("_acum"),ends_with("_del_mes"),
+              one_of(names(.)[!names(.)%in%c(
+                "COD_CLIENTE","aniomes_cot",
+                starts_with("id_"),starts_with("I_"),ends_with("_acum"),ends_with("_del_mes"))]
+                )
+              ))
 ```
 
 
+```{r}
+# saveRDS(base02a_cte,"data/base02a_cte.rds")
+# base03<-base02a_cte%>%ungroup()
+# saveRDS(base03,"data/base03.rds")
+```
+
+```{r}
+# base03_train<-base03%>%
+#   filter(muestra=="train")
+# saveRDS(base03_train,"data/base03_train.rds")
+# 
+# base03_test<-base03%>%
+#   filter(muestra=="test")
+# saveRDS(base03_test,"data/base03_test.rds")
+```
