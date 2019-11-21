@@ -262,7 +262,7 @@ base1%>%
 ```
 
 ```{r}
-saveRDS(base00,"base00.rds")
+saveRDS(base00,"data/base00.rds")
 ```
 
 # Sustituyendo `NA`'s por vesp
