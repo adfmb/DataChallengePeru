@@ -295,6 +295,9 @@ sum(is.na(as.data.frame(
   ))); sum(as.data.frame(
     base01%>%select(one_of(nombres_base00_01))
     )==-556677)
+
+saveRDS(nombres_base00_01,"vars_to_numeric_base00_01.rds")
+saveRDS(base01,"base01.rds")
 ```
 
 
