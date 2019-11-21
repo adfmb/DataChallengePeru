@@ -460,6 +460,14 @@ head(base02a_cte%>%
               ))
 ```
 
+```{r}
+base03<-base02a_cte%>%ungroup()
+
+names(base03)<-gsub("-","__",names(base03))
+# saveRDS(base03,"data/base03.rds")
+```
+
+
 
 ```{r}
 # saveRDS(base02a_cte,"data/base02a_cte.rds")
@@ -468,11 +476,11 @@ head(base02a_cte%>%
 ```
 
 ```{r}
-# base03_train<-base03%>%
-#   filter(muestra=="train")
-# saveRDS(base03_train,"data/base03_train.rds")
-# 
-# base03_test<-base03%>%
-#   filter(muestra=="test")
-# saveRDS(base03_test,"data/base03_test.rds")
+base03_train<-base03%>%
+  filter(muestra=="train")
+saveRDS(base03_train,"data/base03_train.rds")
+
+base03_test<-base03%>%
+  filter(muestra=="test")
+saveRDS(base03_test,"data/base03_test.rds")
 ```
