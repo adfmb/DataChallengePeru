@@ -1,0 +1,57 @@
+---
+title: "Transformación de variables en Base01"
+subtitle: 
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+source("yuca/TR_yk.R")
+```
+
+```{r}
+base03_train<-readRDS("data/base03_train.rds")
+head(base03_train)
+```
+
+```{r}
+base01<-readRDS("data/base01.rds")
+head(base01%>%
+       select(COD_CLIENTE,anio_cot,aniomes_cot,COD_SOL,one_of(names(.)[!names(.)%in%c("COD_CLIENTE","aniomes_cot","anio_cot","COD_SOL")])))
+```
+
+**Vars a excluir de base00_01**
+```{r}
+excluir_b00_01<-c(
+  "MES_COTIZACION","COD_CLIENTE","COD_SOL","GARANTIA","fh_cotizacion","muestra","mes_cot","anio_cot","aniomes_cot","FLG_DESEMBOLSO",#FLG_DESEMBOLSO porque es la variable objetivo y no nos interesa cambiar los NA por algo, ya que los NA corresponden a la base de prueba
+  "SEXO","ESTADO_CIVIL","REGION","MES_DATA")
+excluir_b00_01
+```
+
+**Vars numéricas de `Base01`**
+```{r}
+nombres_base00_01<-readRDS("data/vars_to_numeric_base00_01.rds")
+nombres_base00_01[!grepl("RNG",nombres_base00_01)]
+```
+
+
+
+**Vars nombres base03**
+```{r}
+nombres_base03<-names(base03_train)[!names(base03_train)%in%excluir_b00_01]
+nombres_base03[!nombres_base03%in%nombres_base00_01]
+nombres_base00_01[!nombres_base00_01%in%nombres_base03]
+```
+
+
+**Todas Vars numéricas en base03 para tramear**
+```{r}
+vars_numercias_base03<-unique(c(nombres_base00_01,nombres_base03))
+if(sum(!vars_numercias_base03%in%names(base03))==0){
+  print("saving vars_numercias_base03.rds :")
+  saveRDS(vars_numercias_base03,"data/vars_numercias_base03.rds")
+}
+
+```
