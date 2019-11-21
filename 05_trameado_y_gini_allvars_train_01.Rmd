@@ -48,10 +48,10 @@ nombres_base00_01[!nombres_base00_01%in%nombres_base03]
 
 **Todas Vars numéricas en base03 para tramear**
 ```{r}
-vars_numercias_base03<-unique(c(nombres_base00_01,nombres_base03))
-if(sum(!vars_numercias_base03%in%names(base03))==0){
-  print("saving vars_numercias_base03.rds :")
-  saveRDS(vars_numercias_base03,"data/vars_numercias_base03.rds")
+vars_numericas_base03<-unique(c(nombres_base00_01,nombres_base03))
+if(sum(!vars_numericas_base03%in%names(base03))==0){
+  print("saving vars_numericas_base03 :")
+  saveRDS(vars_numericas_base03,"data/vars_numericas_base03.rds")
 }
 
 ```
