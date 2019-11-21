@@ -196,11 +196,25 @@ saveRDS(base02a,"data/base02a.rds")
 head(base02a)
 ```
 
+```{r}
+suma_categorias<-0
+for(i in 1:length(vars_factor_spread)){
+  # i<-1
+  var_tmp<-vars_factor_spread[i]
+  print(var_tmp)
+  # suma_categorias<-suma_categorias+length(unique(as.data.frame(base02)[,var_tmp]))
+  suma_categorias<-suma_categorias+nrow(unique(base02[,var_tmp]))
+}
+suma_categorias
+```
+```{r}
+(ncol(base02)-length(vars_factor_spread)+suma_categorias); ncol(base02a)
+```
 
 
 # Variables a nivel Cliente + Mes de Cotización
 ```{r}
-base01%>%
+base02a%>%
   group_by(COD_SOL)%>%
   summarise(n=n())%>%
   group_by(n)%>%
@@ -208,7 +222,7 @@ base01%>%
 ```
 
 ```{r}
-base01%>%
+base02a%>%
   group_by(COD_CLIENTE,aniomes_cot)%>%
   summarise(
     n_COD_SOL=length(unique(COD_SOL)),
@@ -219,14 +233,14 @@ base01%>%
 ```
 
 ```{r}
-base01_cte_cot<-base01%>%
+base02a_cte_cot<-base02a%>%
   group_by(COD_CLIENTE,aniomes_cot)%>%
-  arrange(COD_CLIENTE,aniomes_cot,FLG_DESEMBOLSO)
+  arrange(COD_CLIENTE,aniomes_cot,FLG_DESEMBOLSO) # que `FLG_DESEMBOLSO==1` vaya a lo último de cada mes de cotización
 
 ```
 
 ```{r}
-base01_cte_cot_01<-base01_cte_cot%>%
+base02a_cte_cot_01<-base02a_cte_cot%>%
   mutate(
     id_solicitud_mes=row_number(),
     max_importe_acum=cummax(IMPORTE)
