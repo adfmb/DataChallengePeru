@@ -296,14 +296,12 @@ sum(is.na(as.data.frame(
     base01%>%select(one_of(nombres_base00_01))
     )==-556677)
 
-saveRDS(nombres_base00_01,"vars_to_numeric_base00_01.rds")
-saveRDS(base01,"base01.rds")
 ```
 
 
 ```{r}
-saveRDS(nombres_base00_01,"vars_to_numeric_base00_01.rds")
-saveRDS(base01,"base01.rds")
+saveRDS(nombres_base00_01,"data/vars_to_numeric_base00_01.rds")
+saveRDS(base01,"data/base01.rds")
 ```
 
 
@@ -312,12 +310,12 @@ saveRDS(base01,"base01.rds")
 ```{r}
 base01_train<-base01%>%
           filter(muestra=="train")
-saveRDS(base00_train,"base01_train.rds")
+saveRDS(base00_train,"data/base01_train.rds")
 ```
 
 ```{r}
 base01_test<-base01%>%
           filter(muestra=="test")
-saveRDS(base00_test,"base01_test.rds")
+saveRDS(base00_test,"data/base01_test.rds")
 ```
 
