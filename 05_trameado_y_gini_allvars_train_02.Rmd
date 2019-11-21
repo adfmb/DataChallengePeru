@@ -1,0 +1,46 @@
+---
+title: "Trameado de Variables"
+subtitle: "Ejecución de funciones MTR_yk"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+source("yuca/TR_yk.R")
+```
+
+```{r}
+base03_train<-readRDS("data/base03_train.rds")
+head(base03_train)
+```
+
+**Todas Vars numéricas en base03 para tramear**
+```{r}
+vars_numericas_base03<-readRDS("data/vars_numericas_base03.rds")
+```
+
+# Lista de Valores especiales
+
+```{r}
+vesp<-list()
+for(id_vartmp in 1:length(vars_numericas_base03)){
+  # id_vartmp<-1
+  print(id_vartmp)
+  vartmp<-vars_numericas_base03[id_vartmp]
+  print(vartmp)
+  vesp[[vartmp]]<-c(-556677,-667788,-778899)
+}
+length(vars_numericas_base03)
+length(vesp)
+
+sum(names(vesp)!=vars_numericas_base03)
+saveRDS(vesp,"data/vesp.rds")
+```
+
+
+```{r}
+mtr8<-MTR8_yk(fbase = base03_train,vvect = vars_numericas_base03,vobj = "FLG_DESEMBOLSO",vesp = vesp,verbose = T)
+```
+
