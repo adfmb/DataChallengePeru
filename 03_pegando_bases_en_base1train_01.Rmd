@@ -1,0 +1,319 @@
+---
+title: "Pegando bases en Base-1-train"
+subtitle: 
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+# Leyendo bases {.tabset}
+
+## Base 1
+
+### train
+```{r}
+base1_train<-readRDS("data/Base1_train.rds")
+head(base1_train)
+```
+
+### test
+```{r}
+base1_test<-readRDS("data/Base1_test.rds")
+head(base1_test)
+```
+
+### Uniendo filas de train & test
+```{r}
+nombres_train<-names(base1_train)
+nombres_test<-names(base1_test)
+nombres_train[!nombres_train%in%nombres_test]
+nombres_test[!nombres_test%in%nombres_train]
+```
+
+```{r}
+base1<-base1_train%>%
+  mutate(muestra="train")%>%
+  bind_rows(
+    base1_test%>%
+      mutate(muestra="test")
+  )
+base1; sum(is.na(base1$FLG_DESEMBOLSO)); nrow(base1_test)
+```
+
+```{r}
+library(lubridate)
+base1<-base1%>%
+  mutate(
+    fh_cotizacion=as.character(MES_COTIZACION),
+    fh_cotizacion=as.POSIXct(fh_cotizacion, format="%d/%m/%Y"),
+    mes_cot=month(fh_cotizacion),
+    anio_cot=year(fh_cotizacion),
+    aniomes_cot=(100*anio_cot) + mes_cot
+  )
+
+base1%>%
+  select(MES_COTIZACION,fh_cotizacion,mes_cot,anio_cot,aniomes_cot)
+```
+
+```{r}
+base1%>%
+  group_by(COD_CLIENTE,aniomes_cot,COD_SOL)%>%
+  summarise(n=n())%>%
+  group_by(n)%>%
+  summarise(frew_n=n())
+```
+
+```{r}
+saveRDS(base1,"data/Base1.rds")
+```
+
+
+
+## Base 2
+```{r}
+base2<-readRDS("data/Base2.rds")
+head(base2)
+```
+
+
+```{r}
+# library(lubridate)
+base2<-base2%>%
+  mutate(
+    fh_cotizacion=as.character(MES_COTIZACION),
+    fh_cotizacion=as.POSIXct(fh_cotizacion, format="%d/%m/%Y"),
+    mes_cot=month(fh_cotizacion),
+    anio_cot=year(fh_cotizacion),
+    aniomes_cot=(100*anio_cot) + mes_cot
+  )
+
+base2%>%
+  select(MES_COTIZACION,fh_cotizacion,mes_cot,anio_cot,aniomes_cot)
+```
+
+```{r}
+base2%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  summarise(n=n())%>%
+  group_by(n)%>%
+  summarise(frew_n=n())
+```
+
+```{r}
+saveRDS(base2,"data/Base2.rds")
+```
+
+
+
+
+## Base 3
+```{r}
+base3b<-readRDS("data/Base3b.rds")
+head(base3b,10)
+```
+
+```{r}
+base3b%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  summarise(n=n())%>%
+  group_by(n)%>%
+  summarise(frew_n=n())
+```
+
+## Base 4
+```{r}
+base4b<-readRDS("data/Base4b.rds")
+head(base4b,10)
+```
+
+```{r}
+base4b%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  summarise(n=n())%>%
+  group_by(n)%>%
+  summarise(frew_n=n())
+```
+
+
+## Base 5
+```{r}
+base5b<-readRDS("data/Base5b.rds")
+head(base5b,10)
+```
+
+```{r}
+base5b%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  summarise(n=n())%>%
+  group_by(n)%>%
+  summarise(frew_n=n())
+```
+
+
+
+
+# Pegando todo a Base 1
+
+```{r}
+nombres_base1<-names(base1)
+nombres_base2<-names(base2)
+nombres_base3<-names(base3b)
+nombres_base4<-names(base4b)
+nombres_base5<-names(base5b)
+```
+
+
+```{r}
+print("base1")
+nombres_base1[nombres_base1%in%nombres_base2]
+nombres_base1[nombres_base1%in%nombres_base3]
+nombres_base1[nombres_base1%in%nombres_base4]
+nombres_base1[nombres_base1%in%nombres_base5]
+
+print("base2")
+nombres_base2[nombres_base2%in%nombres_base3]
+nombres_base2[nombres_base2%in%nombres_base4]
+nombres_base2[nombres_base2%in%nombres_base5]
+
+print("base3")
+nombres_base3[nombres_base3%in%nombres_base4]
+nombres_base3[nombres_base3%in%nombres_base5]
+
+print("base4")
+nombres_base4[nombres_base4%in%nombres_base5]
+```
+
+```{r}
+print("base1")
+nombres_base1[!nombres_base1%in%nombres_base2]
+nombres_base1[!nombres_base1%in%nombres_base3]
+nombres_base1[!nombres_base1%in%nombres_base4]
+nombres_base1[!nombres_base1%in%nombres_base5]
+
+print("base2")
+nombres_base2[!nombres_base2%in%nombres_base3]
+nombres_base2[!nombres_base2%in%nombres_base4]
+nombres_base2[!nombres_base2%in%nombres_base5]
+
+print("base3")
+nombres_base3[!nombres_base3%in%nombres_base4]
+nombres_base3[!nombres_base3%in%nombres_base5]
+
+print("base4")
+nombres_base4[!nombres_base4%in%nombres_base5]
+```
+
+```{r}
+base00<-base1%>%
+  left_join(
+    base2%>%
+      select(-one_of(c("MES_COTIZACION","fh_cotizacion","mes_cot","anio_cot")))#,
+    # by=c("COD_CLIENTE"="COD_CLIENTE", "aniomes_cot"="aniomes_cot")
+  )%>%
+  left_join(
+    base3b%>%
+      select(-one_of(c(
+        # "MES_COTIZACION","fh_cotizacion",
+        "mes_cot","anio_cot")))#,
+    # by=c("COD_CLIENTE"="COD_CLIENTE", "aniomes_cot"="aniomes_cot")
+  )%>%
+  left_join(
+    base4b%>%
+      select(-one_of(c(
+        # "MES_COTIZACION","fh_cotizacion",
+        "mes_cot","anio_cot",
+         "numfhs_dat","min_dat","max_dat","min_meses_dif","max_meses")))#,
+    # by=c("COD_CLIENTE"="COD_CLIENTE", "aniomes_cot"="aniomes_cot")
+  )%>%
+  left_join(
+    base5b%>%
+      select(-one_of(c(
+        # "MES_COTIZACION","fh_cotizacion",
+        "mes_cot","anio_cot",
+         "numfhs_dat","min_dat","max_dat","min_meses_dif","max_meses")))#,
+    # by=c("COD_CLIENTE"="COD_CLIENTE", "aniomes_cot"="aniomes_cot")
+  )
+
+nrow(base00); nrow(base1)
+```
+
+
+```{r}
+base1%>%
+  group_by(COD_CLIENTE,aniomes_cot)%>%
+  summarise(n=n())%>%
+  group_by(n)%>%
+  summarise(freq_b1=n())%>%
+  left_join(
+    base00%>%
+      group_by(COD_CLIENTE,aniomes_cot)%>%
+      summarise(n=n())%>%
+      group_by(n)%>%
+      summarise(freq_b00=n())
+    )%>%
+  mutate(
+    dif=freq_b1-freq_b00
+  )
+
+```
+
+```{r}
+saveRDS(base00,"base00.rds")
+```
+
+# Sustituyendo `NA`'s por vesp
+```{r}
+nombres_base00<-names(base00)
+nombres_base00_01<-nombres_base00[!nombres_base00%in%c(
+  "MES_COTIZACION","COD_CLIENTE","COD_SOL","GARANTIA","fh_cotizacion","muestra",
+  "mes_cot","anio_cot","aniomes_cot","FLG_DESEMBOLSO", #FLG_DESEMBOLSO porque es la variable objetivo y no nos interesa cambiar los NA por algo, ya que los NA corresponden a la base de prueba
+  "SEXO","ESTADO_CIVIL","REGION",
+  "MES_DATA"
+  )]
+
+nombres_base00_01[!grepl("RNG",nombres_base00_01)]
+```
+
+
+```{r}
+clases<-as.data.frame(base00)%>%
+  mutate(fh_cotizacion=as.character(fh_cotizacion))%>%
+  summarise_all(class)#apply(head(base00),1,class)
+df_clases<-data_frame(
+  "campos"=names(base00),
+  "clase"=clases
+)
+df_clases
+```
+
+```{r}
+base00_train<-base00%>%
+          filter(muestra=="train")
+saveRDS(base00_train,"base00_train.rds")
+```
+
+```{r}
+base00_test<-base00%>%
+          filter(muestra=="test")
+saveRDS(base00_test,"base00_test.rds")
+```
+
+
+
+# Dividiendo Base00 en train & test
+```{r}
+base00_train<-base00%>%
+          filter(muestra=="train")
+saveRDS(base00_train,"base00_train.rds")
+```
+
+```{r}
+base00_test<-base00%>%
+          filter(muestra=="test")
+saveRDS(base00_test,"base00_test.rds")
+```
+
